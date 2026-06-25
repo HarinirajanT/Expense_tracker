@@ -1,5 +1,7 @@
 import axios from 'axios';
+import { demoRequest } from './demoApi';
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api-v1';
 
 const api = axios.create({ baseURL: API_URL });
@@ -12,4 +14,20 @@ export function setAuthToken(token) {
   }
 }
 
+function stripPath(url) {
+  return url.replace(API_URL, '').replace(/^\//, '');
+}
+
+function getToken() {
+  return api.defaults.headers.common.Authorization?.replace('Bearer ', '');
+}
+
+if (DEMO_MODE) {
+  api.post = (url, data) => demoRequest('POST', stripPath(url), data, getToken());
+  api.get = (url) => demoRequest('GET', stripPath(url), null, getToken());
+  api.put = (url, data) => demoRequest('PUT', stripPath(url), data, getToken());
+  api.delete = (url) => demoRequest('DELETE', stripPath(url), null, getToken());
+}
+
 export default api;
+export const isDemoMode = DEMO_MODE;

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import api from '../libs/apiCall';
+import api, { isDemoMode } from '../libs/apiCall';
+import { DEMO_USER } from '../libs/demoApi';
 import useStore from '../store';
 import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
@@ -22,28 +23,31 @@ export default function SignIn() {
       if (data.status === 'success') {
         setCredentials({ user: data.user, token: data.token });
         toast.success('Welcome back!');
-        navigate('/overview');
+        navigate(data.user.onboarded === false ? '/onboarding' : '/overview');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthLayout title="Sign in" subtitle="Track expenses, accounts, and insights in one place.">
+    <AuthLayout title="Sign in" subtitle="Enter your email and password to open your dashboard.">
       <form onSubmit={submit} className="space-y-4">
         <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <Button type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</Button>
       </form>
-      <p className="text-sm text-center text-slate-500 mt-4">
-        No account?{' '}
-        <Link to="/sign-up" className="text-violet-600 font-medium hover:underline">
-          Create one
-        </Link>
+      <p className="text-sm text-center text-[var(--muted)] mt-4">
+        New here? <Link to="/sign-up" className="text-indigo-600 font-semibold hover:underline">Create account</Link>
       </p>
+      {isDemoMode && (
+        <button type="button" onClick={() => { setEmail(DEMO_USER.email); setPassword(DEMO_USER.password); }}
+          className="w-full mt-4 text-xs text-[var(--muted)] hover:text-indigo-600">
+          Try demo account
+        </button>
+      )}
     </AuthLayout>
   );
 }

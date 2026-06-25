@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import api from '../libs/apiCall';
-import Card from '../components/Card';
+import GlassCard, { PageHeader, formatINR } from '../components/ui';
 import Input from '../components/Input';
 import Button from '../components/Button';
 
@@ -35,7 +35,7 @@ export default function Accounts() {
         account_number: form.account_number,
         amount: form.amount,
       });
-      toast.success('Account created');
+      toast.success('Account created!');
       setForm({ name: '', account_number: '', amount: '' });
       load();
     } catch (err) {
@@ -47,7 +47,7 @@ export default function Accounts() {
     e.preventDefault();
     try {
       await api.put(`/account/add-money/${deposit.id}`, { amount: deposit.amount });
-      toast.success('Deposit successful');
+      toast.success('Deposit recorded');
       setDeposit((d) => ({ ...d, amount: '' }));
       load();
     } catch (err) {
@@ -55,34 +55,62 @@ export default function Accounts() {
     }
   };
 
-  if (loading) return <p className="text-slate-500">Loading...</p>;
+  if (loading) return <p className="text-[var(--muted)]">Loading...</p>;
+
+  const totalBalance = accounts.reduce((s, a) => s + Number(a.account_balance), 0);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Accounts</h1>
-        <p className="text-slate-500 text-sm">Manage wallets and deposit funds</p>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <PageHeader title="Accounts" subtitle="Create your wallets and bank accounts with your real balances" />
+
+      {accounts.length > 0 && (
+        <GlassCard className="text-center">
+          <p className="text-sm text-[var(--muted)] mb-1">Total Balance</p>
+          <p className="text-4xl font-bold text-gradient-brand">{formatINR(totalBalance)}</p>
+        </GlassCard>
+      )}
+
+      {accounts.length === 0 && (
+        <div className="card p-8 text-center border-dashed border-2 border-teal-300 bg-teal-50/50">
+          <p className="text-4xl mb-3">🏦</p>
+          <p className="font-bold text-lg mb-2">No accounts yet</p>
+          <p className="text-sm text-[var(--muted)] max-w-sm mx-auto">
+            Create your first account below — e.g. &quot;HDFC Savings&quot; with your current balance.
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {accounts.map((a) => (
+          <GlassCard key={a.id}>
+            <p className="text-xs text-[var(--muted)] mb-1">{a.account_number}</p>
+            <p className="font-semibold text-lg mb-2 text-[var(--text)]">{a.account_name}</p>
+            <p className="text-2xl font-bold text-teal-700">{formatINR(a.account_balance)}</p>
+          </GlassCard>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card title="Create Account">
+        <GlassCard hover={false}>
+          <p className="text-sm font-semibold mb-4 text-[var(--text)]">Create Account</p>
           <form onSubmit={createAccount} className="space-y-4">
-            <Input label="Account name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-            <Input label="Account number" value={form.account_number} onChange={(e) => setForm({ ...form, account_number: e.target.value })} required />
-            <Input label="Initial balance (₹)" type="number" min="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required />
+            <Input label="Account name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required placeholder="e.g. Main Wallet" />
+            <Input label="Account number / ID" value={form.account_number} onChange={(e) => setForm({ ...form, account_number: e.target.value })} required placeholder="e.g. ACC-001" />
+            <Input label="Current balance (₹)" type="number" min="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} required placeholder="0" />
             <Button type="submit">Create Account</Button>
           </form>
-        </Card>
+        </GlassCard>
 
-        <Card title="Add Money">
+        <GlassCard hover={false}>
+          <p className="text-sm font-semibold mb-4 text-[var(--text)]">Add Money (Income)</p>
           {accounts.length === 0 ? (
-            <p className="text-sm text-slate-500">Create an account first.</p>
+            <p className="text-sm text-[var(--muted)]">Create an account first.</p>
           ) : (
             <form onSubmit={addMoney} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1.5">Account</label>
                 <select
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm"
+                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm"
                   value={deposit.id}
                   onChange={(e) => setDeposit({ ...deposit, id: e.target.value })}
                 >
@@ -91,25 +119,12 @@ export default function Accounts() {
                   ))}
                 </select>
               </div>
-              <Input label="Amount (₹)" type="number" min="1" value={deposit.amount} onChange={(e) => setDeposit({ ...deposit, amount: e.target.value })} required />
-              <Button type="submit">Deposit</Button>
+              <Input label="Amount (₹)" type="number" min="1" value={deposit.amount} onChange={(e) => setDeposit({ ...deposit, amount: e.target.value })} required placeholder="e.g. 30000" />
+              <Button type="submit">Record Deposit</Button>
             </form>
           )}
-        </Card>
+        </GlassCard>
       </div>
-
-      <Card title="Your Accounts">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {accounts.map((a) => (
-            <div key={a.id} className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-              <p className="font-semibold text-lg">{a.account_name}</p>
-              <p className="text-xs text-slate-500 mb-2">{a.account_number}</p>
-              <p className="text-2xl font-bold text-violet-600">₹{Number(a.account_balance).toLocaleString('en-IN')}</p>
-            </div>
-          ))}
-          {accounts.length === 0 && <p className="text-slate-500 text-sm">No accounts yet.</p>}
-        </div>
-      </Card>
     </div>
   );
 }

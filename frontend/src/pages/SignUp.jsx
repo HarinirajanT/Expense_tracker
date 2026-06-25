@@ -13,18 +13,23 @@ export default function SignUp() {
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
     setLoading(true);
     try {
-      await api.post('/auth/sign-up', { firstName, email, password });
+      await api.post('/auth/sign-up', { firstName, email, password, confirmPassword });
       const { data } = await api.post('/auth/sign-in', { email, password });
       if (data.status === 'success') {
         setCredentials({ user: data.user, token: data.token });
-        toast.success('Account created!');
-        navigate('/overview');
+        toast.success('Account created! Complete your setup.');
+        navigate('/onboarding');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Sign up failed');
@@ -34,18 +39,16 @@ export default function SignUp() {
   };
 
   return (
-    <AuthLayout title="Create account" subtitle="Start tracking your finances today.">
+    <AuthLayout title="Create account" subtitle="Sign up with your email — your data starts completely empty">
       <form onSubmit={submit} className="space-y-4">
-        <Input label="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+        <Input label="Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
         <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-        <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Sign up'}</Button>
+        <Input label="Confirm password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} />
+        <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Register'}</Button>
       </form>
-      <p className="text-sm text-center text-slate-500 mt-4">
-        Already have an account?{' '}
-        <Link to="/sign-in" className="text-violet-600 font-medium hover:underline">
-          Sign in
-        </Link>
+      <p className="text-sm text-center text-[var(--muted)] mt-4">
+        Already have an account? <Link to="/sign-in" className="text-indigo-600 font-semibold hover:underline">Sign in</Link>
       </p>
     </AuthLayout>
   );
