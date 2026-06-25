@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addTransaction,
+  deleteTransaction,
   getDashboardInformation,
   getTransactions,
   transferMoneyToAccount,
@@ -12,6 +13,7 @@ const router = express.Router();
 router.get("/", authMiddleware, getTransactions);
 router.get("/dashboard", authMiddleware, getDashboardInformation);
 router.post("/add-transaction/:account_id", authMiddleware, addTransaction);
+router.delete("/:id", authMiddleware, deleteTransaction);
 router.put("/transfer-money", authMiddleware, transferMoneyToAccount);
 
 export default router;

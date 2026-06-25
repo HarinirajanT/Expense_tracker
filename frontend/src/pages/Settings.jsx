@@ -1,4 +1,5 @@
 import useStore from '../store';
+import { isDemoMode } from '../libs/apiCall';
 import GlassCard, { PageHeader } from '../components/ui';
 import Button from '../components/Button';
 
@@ -10,13 +11,17 @@ export default function Settings() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'rupeeflow-profile.json';
+    a.download = 'expense-tracker-profile.json';
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const clearLocalData = () => {
-    if (window.confirm('Clear all RupeeFlow local data? This cannot be undone.')) {
+    if (!isDemoMode) {
+      alert('In full-stack mode, data is stored in PostgreSQL. Sign out to switch accounts.');
+      return;
+    }
+    if (window.confirm('Clear all local demo data? This cannot be undone.')) {
       localStorage.removeItem('finsight_ai_db_v1');
       localStorage.removeItem('user');
       window.location.href = '/';
@@ -54,7 +59,11 @@ export default function Settings() {
 
       <GlassCard hover={false}>
         <p className="text-sm text-[var(--muted)] mb-4">Data</p>
-        <p className="text-sm text-[var(--muted)] mb-4">Your accounts and transactions are stored in your browser session.</p>
+        <p className="text-sm text-[var(--muted)] mb-4">
+          {isDemoMode
+            ? 'Demo mode: data is stored in your browser.'
+            : 'Full-stack mode: data is stored in PostgreSQL on the server.'}
+        </p>
         <div className="flex flex-wrap gap-3">
           <Button type="button" onClick={exportData} className="!w-auto px-5">Export Profile</Button>
           <Button type="button" variant="secondary" onClick={clearLocalData} className="!w-auto px-5 text-rose-600">Reset All Data</Button>
