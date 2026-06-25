@@ -1,22 +1,51 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { motion } from 'framer-motion';
 import api from '../libs/apiCall';
 import GlassCard, { PageHeader, formatINR } from '../components/ui';
 import HeroCard from '../components/dashboard/HeroCard';
 import GoalRing from '../components/dashboard/GoalRing';
+import Button from '../components/Button';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = () => {
+    setLoading(true);
+    setError('');
+    api
+      .get('/intelligence/dashboard')
+      .then((res) => {
+        if (res.data?.status === 'success') setData(res.data);
+        else setError(res.data?.message || 'Unexpected response');
+      })
+      .catch((err) => setError(err.response?.data?.message || 'Failed to load dashboard'))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    api.get('/intelligence/dashboard').then((res) => setData(res.data)).catch(console.error).finally(() => setLoading(false));
+    load();
   }, []);
 
   if (loading) return <p className="text-[var(--muted)] text-center py-20">Loading dashboard...</p>;
-  if (!data) return <p className="text-rose-600">Failed to load dashboard.</p>;
+
+  if (error || !data) {
+    return (
+      <div className="max-w-md mx-auto card p-8 text-center mt-12">
+        <p className="text-4xl mb-3">⚠️</p>
+        <p className="font-bold text-lg mb-2">Could not load dashboard</p>
+        <p className="text-sm text-[var(--muted)] mb-6">{error || 'Unknown error'}</p>
+        <div className="flex flex-col gap-2">
+          <Button type="button" onClick={load}>Try again</Button>
+          <Link to="/sign-in" className="text-sm text-indigo-600 font-medium hover:underline">
+            Sign in again
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const snap = data.snapshot || {};
 
