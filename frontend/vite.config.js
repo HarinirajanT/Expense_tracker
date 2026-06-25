@@ -3,5 +3,6 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  base: process.env.GITHUB_PAGES === 'true' ? '/Expense_tracker/' : '/',
   server: { port: 5174, open: true },
 });
