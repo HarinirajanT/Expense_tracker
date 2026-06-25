@@ -1,10 +1,11 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 import { demoRequest } from './demoApi';
 
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api-v1';
 
-const api = axios.create({ baseURL: API_URL });
+const api = axios.create({ baseURL: API_URL, timeout: 15000 });
 
 export function setAuthToken(token) {
   if (token) {
@@ -22,11 +23,36 @@ function getToken() {
   return api.defaults.headers.common.Authorization?.replace('Bearer ', '');
 }
 
+function wrapDemo(method, url, data) {
+  return demoRequest(method, stripPath(url), data, getToken()).catch((err) => {
+    throw err;
+  });
+}
+
 if (DEMO_MODE) {
-  api.post = (url, data) => demoRequest('POST', stripPath(url), data, getToken());
-  api.get = (url) => demoRequest('GET', stripPath(url), null, getToken());
-  api.put = (url, data) => demoRequest('PUT', stripPath(url), data, getToken());
-  api.delete = (url) => demoRequest('DELETE', stripPath(url), null, getToken());
+  api.post = (url, data) => wrapDemo('POST', url, data);
+  api.get = (url) => wrapDemo('GET', url, null);
+  api.put = (url, data) => wrapDemo('PUT', url, data);
+  api.delete = (url) => wrapDemo('DELETE', url, null);
+} else {
+  api.interceptors.response.use(
+    (res) => res,
+    (error) => {
+      const msg =
+        error.response?.data?.message ||
+        (error.code === 'ECONNABORTED' ? 'Request timed out' : null) ||
+        (error.message === 'Network Error'
+          ? 'Cannot reach server. Is the backend running on port 8000?'
+          : error.message);
+      if (msg && !error.config?.silent) {
+        console.error('[API]', msg);
+      }
+      return Promise.reject({
+        ...error,
+        response: error.response || { data: { message: msg } },
+      });
+    }
+  );
 }
 
 export default api;

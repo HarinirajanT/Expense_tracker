@@ -67,7 +67,7 @@ export const signinUser = async (req, res) => {
       return res.status(401).json({ status: "failed", message: "Invalid email or password" });
     }
 
-    const token = createJWT(user.id);
+    const token = await createJWT(user.id);
     user.password = undefined;
 
     res.status(200).json({
