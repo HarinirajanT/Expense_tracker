@@ -5,7 +5,7 @@ export const signupUser = async (req, res) => {
   try {
     const { firstName, email, password } = req.body;
 
-    if (!(firstName || email || password)) {
+    if (!firstName || !email || !password) {
       return res.status(404).json({
         status: "failed",
         message: "Provide Required Fields!",
@@ -48,7 +48,7 @@ export const signinUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!(email || password)) {
+    if (!email || !password) {
       return res.status(404).json({
         status: "failed",
         message: "Provide Required Fields!",
