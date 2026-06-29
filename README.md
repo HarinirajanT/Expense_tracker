@@ -2,6 +2,10 @@
 
 **React + Node.js + PostgreSQL** — complete personal finance app.
 
+## Live Demo
+
+**https://harinirajant.github.io/Expense_tracker/**
+
 GitHub: https://github.com/HarinirajanT/Expense_tracker
 
 ---
